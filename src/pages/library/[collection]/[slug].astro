@@ -22,6 +22,7 @@ const {entry}=Astro.props;const {Content}=await render(entry);
 
       <div class="reader-toolbar" aria-label="Reading size controls">
         <span class="reader-toolbar-label">Reading size</span>
+        <button id="favorite-reader" class="favorite-reader-btn" data-favorite={`${Astro.params.collection}/${Astro.params.slug}`} type="button" aria-label="Add to favorites" title="Add to favorites">♡</button>
         <button id="zoom-out" type="button" aria-label="Decrease text size">A−</button>
         <span id="zoom-value" aria-live="polite">100%</span>
         <button id="zoom-in" type="button" aria-label="Increase text size">A+</button>
@@ -44,12 +45,35 @@ const {entry}=Astro.props;const {Content}=await render(entry);
     const out=document.querySelector('#zoom-out');
     const inc=document.querySelector('#zoom-in');
     const reset=document.querySelector('#zoom-reset');
+    const favoriteButton=document.querySelector('#favorite-reader');
+    const favoriteKey='smaran-favorites';
+    const favoriteId=favoriteButton.dataset.favorite;
     const key='smaran-reader-size'; const min=80,max=160,step=10;
     let size=Number(localStorage.getItem(key)||100); if(!Number.isFinite(size)) size=100; size=Math.min(max,Math.max(min,size));
     function apply(){text.style.setProperty('--reader-scale',size/100);value.textContent=`${size}%`;out.disabled=size<=min;inc.disabled=size>=max;localStorage.setItem(key,String(size));}
     out.addEventListener('click',()=>{size=Math.max(min,size-step);apply()});
     inc.addEventListener('click',()=>{size=Math.min(max,size+step);apply()});
     reset.addEventListener('click',()=>{size=100;apply()});
+
+    function getFavorites(){
+      try{return JSON.parse(localStorage.getItem(favoriteKey)||'[]')}catch{return[]}
+    }
+    function updateFavoriteButton(){
+      const saved=getFavorites().includes(favoriteId);
+      favoriteButton.textContent=saved?'♥':'♡';
+      favoriteButton.classList.toggle('is-favorite',saved);
+      favoriteButton.setAttribute('aria-label',saved?'Remove from favorites':'Add to favorites');
+      favoriteButton.title=saved?'Remove from favorites':'Add to favorites';
+    }
+    favoriteButton.addEventListener('click',()=>{
+      const favorites=getFavorites();
+      const index=favorites.indexOf(favoriteId);
+      if(index===-1)favorites.push(favoriteId);else favorites.splice(index,1);
+      localStorage.setItem(favoriteKey,JSON.stringify(favorites));
+      updateFavoriteButton();
+    });
+    window.addEventListener('storage',updateFavoriteButton);
+
     document.addEventListener('keydown',e=>{if(e.key==='-'&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){size=Math.max(min,size-step);apply()}if(e.key==='+'&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){size=Math.min(max,size+step);apply()}});
 
     // Turn standalone traditional section markers into visual reading headings.
@@ -60,5 +84,6 @@ const {entry}=Astro.props;const {Content}=await render(entry);
       }
     });
     apply();
+    updateFavoriteButton();
   </script>
 </BaseLayout>
