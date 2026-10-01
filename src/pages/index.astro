@@ -9,7 +9,7 @@ const all=(await Promise.all(groups.map(async c=>(await getCollection(c)).map(e=
 <section class="hero"><div class="hero-aura"></div><div class="hero-copy">
 <div class="eyebrow">॥ श्री गणेशाय नमः ॥</div><h1>नित्यं<br><em>स्मरणम्</em></h1>
 <p>A collection of prayers, stotras, mantras, aartis and shlokas — made for everyday reading and festivals.</p>
-<div class="search-wrap"><span>⌕</span><input id="q" placeholder="Search stotras, gods, festivals..." autocomplete="off"><kbd>/</kbd></div>
+<div class="search-wrap"><span>⌕</span><input id="q" placeholder="Search stotras, gods, festivals..." autocomplete="off"><button id="clear-search" type="button" aria-label="Clear search" title="Clear search" hidden>×</button><kbd>/</kbd></div>
 <div class="chips"><button data-q="गणेश">गणेश</button><button data-q="शिव">शिव</button><button data-q="विष्णु">विष्णु</button><button data-q="देवी">देवी</button><button data-q="हनुमान">हनुमान</button></div>
 </div><div class="hero-lamp">🪔</div></section>
 
@@ -29,6 +29,19 @@ const all=(await Promise.all(groups.map(async c=>(await getCollection(c)).map(e=
 <section id="festivals" class="section compact"><div class="section-head"><div><span class="section-kicker">Seasonal</span><h2>Festivals & occasions</h2></div></div><div class="festival-grid"><article data-q="गणेशोत्सव" tabindex="0" role="button">🐘<h3>गणेशोत्सव</h3><p>गणेश मंत्र, स्तोत्र आणि आरत्या.</p></article><article data-q="महालक्ष्मी" tabindex="0" role="button">🌺<h3>महालक्ष्म्या / गौरी</h3><p>महालक्ष्मी आणि गौरीच्या आरत्या आणि स्तोत्रे.</p></article><article data-q="नवरात्रि" tabindex="0" role="button">🌺<h3>नवरात्रि</h3><p>देवी स्तोत्र आणि प्रार्थना.</p></article><article data-q="महाशिवरात्री" tabindex="0" role="button">🔱<h3>महाशिवरात्री</h3><p>शिव मंत्र आणि स्तोत्र.</p></article></div></section>
 <section id="favorites" class="section compact"><div class="section-head"><div><span class="section-kicker">Saved on this device</span><h2>Your favorites</h2></div><a class="back" href="/favorites">View all →</a></div><div id="favs" class="favorites-list favorites-preview"></div></section>
 </main>
+<style>
+.search-wrap #clear-search{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:2px 4px;
+  font:22px/1 var(--sans);
+  cursor:pointer;
+}
+.search-wrap #clear-search:hover{
+  color:var(--ink);
+}
+</style>
 <style>
 /* Match homepage favorite cards to the festival-card width, with a little extra height for prayer details. */
 .favorites-preview{
@@ -59,7 +72,7 @@ const all=(await Promise.all(groups.map(async c=>(await getCollection(c)).map(e=
 }
 </style>
 <script define:vars={{all}}>
-const input=document.querySelector('#q'), sections=document.querySelector('#sections'),results=document.querySelector('#results'),resultsSection=document.querySelector('#search-results-section'),cards=document.querySelector('#cards'),empty=document.querySelector('#empty'),label=document.querySelector('#label'),items=all;
+const input=document.querySelector('#q'), clearSearch=document.querySelector('#clear-search'), sections=document.querySelector('#sections'),results=document.querySelector('#results'),resultsSection=document.querySelector('#search-results-section'),cards=document.querySelector('#cards'),empty=document.querySelector('#empty'),label=document.querySelector('#label'),items=all;
 function normalize(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' ')}
 function match(i,q){const haystack=normalize([i.title,i.subtitle,i.type,...i.deity,...i.festivals,...i.aliases,...i.language].join(' '));return haystack.includes(normalize(q))}
 const favoriteKey='smaran-favorites';
@@ -75,16 +88,18 @@ function cardMarkup(i){
   const id=`${i.collection}/${i.slug}`, saved=isFavorite(i);
   return `<article class="card"><a class="card-main" href="/library/${i.collection}/${i.slug}"><span class="card-icon">${i.icon}</span><span class="card-type">${i.type}</span><h3>${i.title}</h3><p>${i.subtitle}</p></a><div class="card-bottom"><a class="card-read" href="/library/${i.collection}/${i.slug}">Read →</a><button class="favorite-btn${saved?' is-favorite':''}" type="button" data-favorite="${id}" aria-label="${saved?'Remove from favorites':'Add to favorites'}" title="${saved?'Remove from favorites':'Add to favorites'}">${saved?'♥':'♡'}</button></div></article>`;
 }
-function render(q){const list=q?items.filter(i=>match(i,q)):[];sections.hidden=!!q;resultsSection.hidden=!q;label.textContent=q?`“${q}”`:'';cards.innerHTML=list.map(cardMarkup).join('');empty.hidden=!!list.length}
+function render(q){const list=q?items.filter(i=>match(i,q)):[];sections.hidden=!!q;resultsSection.hidden=!q;label.textContent=q?`“${q}”`:'';cards.innerHTML=list.map(cardMarkup).join('');empty.hidden=!!list.length;clearSearch.hidden=!q}
 function renderFavorites(){
   const favorites=document.querySelector('#favs'), saved=getFavorites();
   const list=saved.map(id=>items.find(i=>`${i.collection}/${i.slug}`===id)).filter(Boolean);
   favorites.innerHTML=list.length?list.slice(0,8).map(cardMarkup).join(''):'<span class="favorites-empty">Your saved prayers will appear here.</span>';
 }
 input.oninput=()=>render(input.value.trim());
+function clearSearchInput(){input.value='';render('');input.focus()}
+clearSearch.addEventListener('click',clearSearchInput);
 function runSearch(q){input.value=q;render(q);document.querySelector('#search-results-section')?.scrollIntoView({behavior:'smooth'})}
 document.querySelectorAll('[data-q]').forEach(b=>{b.addEventListener('click',()=>runSearch(b.dataset.q));b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();runSearch(b.dataset.q)}})});
-document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!==input){e.preventDefault();input.focus()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&input.value){clearSearchInput();return}if(e.key==='/'&&document.activeElement!==input){e.preventDefault();input.focus()}});
 document.addEventListener('click',e=>{const button=e.target.closest('[data-favorite]');if(!button)return;const [collection,slug]=button.dataset.favorite.split('/');const item=items.find(i=>i.collection===collection&&i.slug===slug);if(item)toggleFavorite(item)});
 window.addEventListener('storage',()=>{render(input.value.trim());renderFavorites()});
 renderFavorites();
