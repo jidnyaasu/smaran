@@ -13,21 +13,24 @@ const all=(await Promise.all(groups.map(async c=>(await getCollection(c)).map(e=
 <div class="chips"><button data-q="गणेश">गणेश</button><button data-q="शिव">शिव</button><button data-q="विष्णु">विष्णु</button><button data-q="देवी">देवी</button><button data-q="हनुमान">हनुमान</button></div>
 </div><div class="hero-lamp">🪔</div></section>
 
-<section id="library" class="section"><div class="section-head"><div><span class="section-kicker">Explore</span><h2>The library</h2></div><span id="count"></span></div>
+<section id="search-results-section" class="section compact" hidden>
+<div id="results" class="search-results"><div class="search-heading">Search results <strong id="label"></strong></div><div id="cards" class="cards"></div><div id="empty" class="empty" hidden>No prayers found. Try another term.</div></div>
+</section>
+
+<section id="library" class="section"><div class="section-head"><div><span class="section-kicker">Explore</span><h2>The library</h2></div></div>
 <div id="sections" class="library-sections">
 <a class="library-card" href="/library/stotra"><span class="library-icon">🕉️</span><span class="card-type">स्तोत्र</span><h3>Stotra</h3><p>Sacred hymns & prayers</p><b>Explore →</b></a>
 <a class="library-card" href="/library/aarti"><span class="library-icon">🪔</span><span class="card-type">आरती</span><h3>Aarti</h3><p>Devotional songs & aartis</p><b>Explore →</b></a>
 <a class="library-card" href="/library/mantra-shloka"><span class="library-icon">📿</span><span class="card-type">मंत्र • श्लोक</span><h3>Mantra & Shloka</h3><p>Mantras, verses & daily prayers</p><b>Explore →</b></a>
 </div>
-<div id="results" class="search-results" hidden><div class="search-heading">Search results <strong id="label"></strong></div><div id="cards" class="cards"></div><div id="empty" class="empty" hidden>No prayers found. Try another term.</div></div>
 </section>
 
 <section class="daily-card"><div class="daily-symbol">ॐ</div><div><span class="section-kicker">A little for today</span><h2>वक्रतुण्ड महाकाय</h2><p class="devanagari">वक्रतुण्ड महाकाय सूर्यकोटि समप्रभः ।<br>निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा ॥</p><p class="translation">A traditional prayer for an auspicious, obstacle-free beginning.</p></div></section>
-<section id="festivals" class="section compact"><div class="section-head"><div><span class="section-kicker">Seasonal</span><h2>Festivals & occasions</h2></div></div><div class="festival-grid"><article data-q="दिवाळी" tabindex="0" role="button">🪔<h3>दिवाळी</h3><p>Search the library for Diwali prayers.</p></article><article data-q="नवरात्रि" tabindex="0" role="button">🌺<h3>नवरात्रि</h3><p>Devi stotras & prayers.</p></article><article data-q="गणेश चतुर्थी" tabindex="0" role="button">🐘<h3>गणेश चतुर्थी</h3><p>Ganesh mantras & aartis.</p></article><article data-q="महाशिवरात्री" tabindex="0" role="button">🔱<h3>महाशिवरात्री</h3><p>Shiva mantras & stotras.</p></article></div></section>
+<section id="festivals" class="section compact"><div class="section-head"><div><span class="section-kicker">Seasonal</span><h2>Festivals & occasions</h2></div></div><div class="festival-grid"><article data-q="गणेशोत्सव" tabindex="0" role="button">🐘<h3>Ganeshotsav</h3><p>Ganesh mantras & aartis.</p></article><article data-q="महालक्ष्मी" tabindex="0" role="button">🌺<h3>Mahalaxmya / Gauri</h3><p>Mahalaxmi & Gauri prayers.</p></article><article data-q="नवरात्रि" tabindex="0" role="button">🌺<h3>Navaratra</h3><p>Devi stotras & prayers.</p></article><article data-q="महाशिवरात्री" tabindex="0" role="button">🔱<h3>Mahashivratri</h3><p>Shiva mantras & stotras.</p></article></div></section>
 <section id="favorites" class="section compact"><div class="section-head"><div><span class="section-kicker">Saved on this device</span><h2>Your favorites</h2></div></div><div id="favs" class="favorites-list"></div></section>
 </main>
 <script define:vars={{all}}>
-const input=document.querySelector('#q'), sections=document.querySelector('#sections'),results=document.querySelector('#results'),cards=document.querySelector('#cards'),empty=document.querySelector('#empty'),label=document.querySelector('#label'),count=document.querySelector('#count'),items=all;
+const input=document.querySelector('#q'), sections=document.querySelector('#sections'),results=document.querySelector('#results'),resultsSection=document.querySelector('#search-results-section'),cards=document.querySelector('#cards'),empty=document.querySelector('#empty'),label=document.querySelector('#label'),items=all;
 function normalize(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' ')}
 function match(i,q){const haystack=normalize([i.title,i.subtitle,i.type,...i.deity,...i.festivals,...i.aliases,...i.language].join(' '));return haystack.includes(normalize(q))}
 const favoriteKey='smaran-favorites';
@@ -43,14 +46,14 @@ function cardMarkup(i){
   const id=`${i.collection}/${i.slug}`, saved=isFavorite(i);
   return `<article class="card"><a class="card-main" href="/library/${i.collection}/${i.slug}"><span class="card-icon">${i.icon}</span><span class="card-type">${i.type}</span><h3>${i.title}</h3><p>${i.subtitle}</p></a><div class="card-bottom"><a class="card-read" href="/library/${i.collection}/${i.slug}">Read →</a><button class="favorite-btn${saved?' is-favorite':''}" type="button" data-favorite="${id}" aria-label="${saved?'Remove from favorites':'Add to favorites'}" title="${saved?'Remove from favorites':'Add to favorites'}">${saved?'♥':'♡'}</button></div></article>`;
 }
-function render(q){const list=q?items.filter(i=>match(i,q)):[];sections.hidden=!!q;results.hidden=!q;label.textContent=q?`“${q}”`:'';count.textContent=q?`${list.length} result${list.length===1?'':'s'}`:'';cards.innerHTML=list.map(cardMarkup).join('');empty.hidden=!!list.length}
+function render(q){const list=q?items.filter(i=>match(i,q)):[];sections.hidden=!!q;resultsSection.hidden=!q;label.textContent=q?`“${q}”`:'';cards.innerHTML=list.map(cardMarkup).join('');empty.hidden=!!list.length}
 function renderFavorites(){
   const favorites=document.querySelector('#favs'), saved=getFavorites();
   const list=saved.map(id=>items.find(i=>`${i.collection}/${i.slug}`===id)).filter(Boolean);
   favorites.innerHTML=list.length?list.map(cardMarkup).join(''):'<span class="favorites-empty">Your saved prayers will appear here.</span>';
 }
 input.oninput=()=>render(input.value.trim());
-function runSearch(q){input.value=q;render(q);document.querySelector('#library').scrollIntoView({behavior:'smooth'})}
+function runSearch(q){input.value=q;render(q);document.querySelector('#search-results-section')?.scrollIntoView({behavior:'smooth'})}
 document.querySelectorAll('[data-q]').forEach(b=>{b.addEventListener('click',()=>runSearch(b.dataset.q));b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();runSearch(b.dataset.q)}})});
 document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!==input){e.preventDefault();input.focus()}});
 document.addEventListener('click',e=>{const button=e.target.closest('[data-favorite]');if(!button)return;const [collection,slug]=button.dataset.favorite.split('/');const item=items.find(i=>i.collection===collection&&i.slug===slug);if(item)toggleFavorite(item)});
