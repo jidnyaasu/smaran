@@ -1,0 +1,64 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+export async function getStaticPaths(){const out=[];for(const collection of ['stotra','aarti','mantra-shloka']){for(const e of await getCollection(collection))out.push({params:{collection,slug:e.slug},props:{entry:e}})}return out}
+const {entry}=Astro.props;const {Content}=await render(entry);
+---
+<BaseLayout title={`स्मरण — ${entry.data.title}`}>
+  <main>
+    <article class="reader-page">
+      <a class="back" href={`/library/${entry.collection}`}>← Back to {entry.data.type}</a>
+
+      <header class="reader-header">
+        <span class="section-kicker">{entry.data.type} · {entry.data.language.join(' · ')}</span>
+        <div class="reader-symbol" aria-hidden="true">॥</div>
+        <h1>{entry.data.title}</h1>
+        <p class="reader-subtitle">{entry.data.subtitle}</p>
+        <div class="metadata">
+          {entry.data.deity.map(x=><span>◈ {x}</span>)}
+          {entry.data.festivals.map(x=><span>✦ {x}</span>)}
+        </div>
+      </header>
+
+      <div class="reader-toolbar" aria-label="Reading size controls">
+        <span class="reader-toolbar-label">Reading size</span>
+        <button id="zoom-out" type="button" aria-label="Decrease text size">A−</button>
+        <span id="zoom-value" aria-live="polite">100%</span>
+        <button id="zoom-in" type="button" aria-label="Increase text size">A+</button>
+        <button id="zoom-reset" type="button">Reset</button>
+      </div>
+
+      <div id="reader-text" class="reader-text"><Content /></div>
+
+      <div class="reader-closing" aria-hidden="true">॥ ✦ ॥</div>
+      <div class="reader-note">
+        <strong>॥ शुभम् भवतु ॥</strong><br>
+        This page is part of the family prayer library.
+      </div>
+    </article>
+  </main>
+
+  <script>
+    const text=document.querySelector('#reader-text');
+    const value=document.querySelector('#zoom-value');
+    const out=document.querySelector('#zoom-out');
+    const inc=document.querySelector('#zoom-in');
+    const reset=document.querySelector('#zoom-reset');
+    const key='smaran-reader-size'; const min=80,max=160,step=10;
+    let size=Number(localStorage.getItem(key)||100); if(!Number.isFinite(size)) size=100; size=Math.min(max,Math.max(min,size));
+    function apply(){text.style.setProperty('--reader-scale',size/100);value.textContent=`${size}%`;out.disabled=size<=min;inc.disabled=size>=max;localStorage.setItem(key,String(size));}
+    out.addEventListener('click',()=>{size=Math.max(min,size-step);apply()});
+    inc.addEventListener('click',()=>{size=Math.min(max,size+step);apply()});
+    reset.addEventListener('click',()=>{size=100;apply()});
+    document.addEventListener('keydown',e=>{if(e.key==='-'&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){size=Math.max(min,size-step);apply()}if(e.key==='+'&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){size=Math.min(max,size+step);apply()}});
+
+    // Turn standalone traditional section markers into visual reading headings.
+    text.querySelectorAll('p').forEach(p=>{
+      const content=p.textContent?.trim() || '';
+      if(/^॥[^॥]+॥$/.test(content) && content.length < 40){
+        p.classList.add('reader-section-marker');
+      }
+    });
+    apply();
+  </script>
+</BaseLayout>

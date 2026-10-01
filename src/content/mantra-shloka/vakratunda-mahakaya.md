@@ -1,0 +1,12 @@
+---
+title: वक्रतुण्ड महाकाय
+subtitle: Vakratunda Mahakaya
+type: Shloka
+icon: 🐘
+deity: [गणेश, गणपती, Ganesha]
+festivals: [गणेश चतुर्थी]
+aliases: [vakratunda, गणेश श्लोक, ganesh shloka]
+language: [Sanskrit, Marathi]
+---
+वक्रतुण्ड महाकाय कोटिसूर्यसमप्रभ ।
+निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा ॥
