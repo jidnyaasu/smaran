@@ -23,12 +23,13 @@ const all=(await Promise.all(groups.map(async c=>(await getCollection(c)).map(e=
 </section>
 
 <section class="daily-card"><div class="daily-symbol">ॐ</div><div><span class="section-kicker">A little for today</span><h2>वक्रतुण्ड महाकाय</h2><p class="devanagari">वक्रतुण्ड महाकाय सूर्यकोटि समप्रभः ।<br>निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा ॥</p><p class="translation">A traditional prayer for an auspicious, obstacle-free beginning.</p></div></section>
-<section id="festivals" class="section compact"><div class="section-head"><div><span class="section-kicker">Seasonal</span><h2>Festivals & occasions</h2></div></div><div class="festival-grid"><article>🪔<h3>दिवाळी</h3><p>Search the library for Diwali prayers.</p></article><article>🌺<h3>नवरात्रि</h3><p>Devi stotras & prayers.</p></article><article>🐘<h3>गणेश चतुर्थी</h3><p>Ganesh mantras & aartis.</p></article><article>🔱<h3>महाशिवरात्री</h3><p>Shiva mantras & stotras.</p></article></div></section>
+<section id="festivals" class="section compact"><div class="section-head"><div><span class="section-kicker">Seasonal</span><h2>Festivals & occasions</h2></div></div><div class="festival-grid"><article data-q="दिवाळी" tabindex="0" role="button">🪔<h3>दिवाळी</h3><p>Search the library for Diwali prayers.</p></article><article data-q="नवरात्रि" tabindex="0" role="button">🌺<h3>नवरात्रि</h3><p>Devi stotras & prayers.</p></article><article data-q="गणेश चतुर्थी" tabindex="0" role="button">🐘<h3>गणेश चतुर्थी</h3><p>Ganesh mantras & aartis.</p></article><article data-q="महाशिवरात्री" tabindex="0" role="button">🔱<h3>महाशिवरात्री</h3><p>Shiva mantras & stotras.</p></article></div></section>
 <section id="favorites" class="section compact"><div class="section-head"><div><span class="section-kicker">Saved on this device</span><h2>Your favorites</h2></div></div><div id="favs" class="favorites-list"></div></section>
 </main>
 <script define:vars={{all}}>
 const input=document.querySelector('#q'), sections=document.querySelector('#sections'),results=document.querySelector('#results'),cards=document.querySelector('#cards'),empty=document.querySelector('#empty'),label=document.querySelector('#label'),count=document.querySelector('#count'),items=all;
-function match(i,q){return [i.title,i.subtitle,i.type,...i.deity,...i.festivals,...i.aliases,...i.language].join(' ').toLowerCase().includes(q.toLowerCase())}
+function normalize(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' ')}
+function match(i,q){const haystack=normalize([i.title,i.subtitle,i.type,...i.deity,...i.festivals,...i.aliases,...i.language].join(' '));return haystack.includes(normalize(q))}
 const favoriteKey='smaran-favorites';
 const getFavorites=()=>{try{return JSON.parse(localStorage.getItem(favoriteKey)||'[]')}catch{return[]}};
 const isFavorite=i=>getFavorites().includes(`${i.collection}/${i.slug}`);
@@ -49,7 +50,8 @@ function renderFavorites(){
   favorites.innerHTML=list.length?list.map(cardMarkup).join(''):'<span class="favorites-empty">Your saved prayers will appear here.</span>';
 }
 input.oninput=()=>render(input.value.trim());
-document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{input.value=b.dataset.q;render(b.dataset.q);document.querySelector('#library').scrollIntoView({behavior:'smooth'})});
+function runSearch(q){input.value=q;render(q);document.querySelector('#library').scrollIntoView({behavior:'smooth'})}
+document.querySelectorAll('[data-q]').forEach(b=>{b.addEventListener('click',()=>runSearch(b.dataset.q));b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();runSearch(b.dataset.q)}})});
 document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!==input){e.preventDefault();input.focus()}});
 document.addEventListener('click',e=>{const button=e.target.closest('[data-favorite]');if(!button)return;const [collection,slug]=button.dataset.favorite.split('/');const item=items.find(i=>i.collection===collection&&i.slug===slug);if(item)toggleFavorite(item)});
 window.addEventListener('storage',()=>{render(input.value.trim());renderFavorites()});
