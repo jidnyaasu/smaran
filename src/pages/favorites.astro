@@ -1,0 +1,179 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const groups=['stotra','aarti','mantra-shloka'];
+const all=(await Promise.all(groups.map(async c=>(await getCollection(c)).map(e=>({...e.data,collection:c,slug:e.slug}))))).flat();
+---
+
+<BaseLayout>
+<main>
+  <section class="library-hero">
+    <a class="back" href="/">← Back to home</a>
+    <span class="section-kicker">Saved on this device</span>
+    <h1>Your favorites</h1>
+    <p>Your saved prayers, all in one place.</p>
+  </section>
+
+  <section class="section compact">
+    <div class="search-wrap favorites-search">
+      <span>⌕</span>
+      <input id="favorite-search" placeholder="Search your favorites..." autocomplete="off">
+    </div>
+
+    <div class="favorites-filter" role="group" aria-label="Filter favorites">
+      <button class="active" type="button" data-filter="all">All</button>
+      <button type="button" data-filter="stotra">Stotra</button>
+      <button type="button" data-filter="aarti">Aarti</button>
+      <button type="button" data-filter="mantra-shloka">Mantra & Shloka</button>
+    </div>
+
+    <div id="favorite-count" class="search-heading"></div>
+    <div id="favorite-cards" class="cards"></div>
+    <div id="favorite-empty" class="empty" hidden></div>
+  </section>
+</main>
+
+<style>
+  .favorites-search{
+    margin:0 0 16px;
+    max-width:700px;
+  }
+  .favorites-filter{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:0 0 24px;
+  }
+  .favorites-filter button{
+    border:1px solid var(--line);
+    background:transparent;
+    border-radius:20px;
+    padding:7px 13px;
+    color:var(--muted);
+    cursor:pointer;
+    font:inherit;
+  }
+  .favorites-filter button:hover,
+  .favorites-filter button.active{
+    border-color:var(--accent2);
+    color:var(--accent);
+    background:var(--surface);
+  }
+  .favorites-filter button.active{
+    font-weight:600;
+  }
+</style>
+
+<script define:vars={{all}}>
+const items=all;
+const favoriteKey='smaran-favorites';
+const input=document.querySelector('#favorite-search');
+const cards=document.querySelector('#favorite-cards');
+const empty=document.querySelector('#favorite-empty');
+const count=document.querySelector('#favorite-count');
+const filterButtons=[...document.querySelectorAll('[data-filter]')];
+
+let activeFilter='all';
+
+const getFavorites=()=>{
+  try{return JSON.parse(localStorage.getItem(favoriteKey)||'[]')}
+  catch{return[]}
+};
+
+function normalize(value){
+  return String(value||'')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g,' ');
+}
+
+function isFavorite(i){
+  return getFavorites().includes(`${i.collection}/${i.slug}`);
+}
+
+function cardMarkup(i){
+  const id=`${i.collection}/${i.slug}`;
+  const saved=isFavorite(i);
+  return `<article class="card">
+    <a class="card-main" href="/library/${i.collection}/${i.slug}">
+      <span class="card-icon">${i.icon}</span>
+      <span class="card-type">${i.type}</span>
+      <h3>${i.title}</h3>
+      <p>${i.subtitle}</p>
+    </a>
+    <div class="card-bottom">
+      <a class="card-read" href="/library/${i.collection}/${i.slug}">Read →</a>
+      <button class="favorite-btn${saved?' is-favorite':''}" type="button" data-favorite="${id}" aria-label="${saved?'Remove from favorites':'Add to favorites'}" title="${saved?'Remove from favorites':'Add to favorites'}">${saved?'♥':'♡'}</button>
+    </div>
+  </article>`;
+}
+
+function render(){
+  const query=normalize(input.value);
+  const saved=getFavorites();
+
+  let list=saved
+    .map(id=>items.find(i=>`${i.collection}/${i.slug}`===id))
+    .filter(Boolean);
+
+  if(activeFilter!=='all'){
+    list=list.filter(i=>i.collection===activeFilter);
+  }
+
+  if(query){
+    list=list.filter(i=>normalize([
+      i.title,i.subtitle,i.type,
+      ...(i.deity||[]),
+      ...(i.festivals||[]),
+      ...(i.aliases||[]),
+      ...(i.language||[])
+    ].join(' ')).includes(query));
+  }
+
+  count.textContent=`${list.length} saved ${list.length===1?'prayer':'prayers'}`;
+  cards.innerHTML=list.map(cardMarkup).join('');
+
+  if(list.length){
+    empty.hidden=true;
+  }else{
+    empty.hidden=false;
+    empty.textContent=saved.length
+      ? 'No favorites match your current search or filter.'
+      : 'Your saved prayers will appear here.';
+  }
+}
+
+function toggleFavorite(button){
+  const id=button.dataset.favorite;
+  const favorites=getFavorites();
+  const index=favorites.indexOf(id);
+  if(index===-1)favorites.push(id);else favorites.splice(index,1);
+  localStorage.setItem(favoriteKey,JSON.stringify(favorites));
+  render();
+}
+
+input.addEventListener('input',render);
+
+filterButtons.forEach(button=>{
+  button.addEventListener('click',()=>{
+    activeFilter=button.dataset.filter;
+    filterButtons.forEach(b=>b.classList.toggle('active',b===button));
+    render();
+  });
+});
+
+cards.addEventListener('click',event=>{
+  const button=event.target.closest('[data-favorite]');
+  if(button){
+    event.preventDefault();
+    toggleFavorite(button);
+  }
+});
+
+window.addEventListener('storage',render);
+render();
+</script>
+</BaseLayout>
