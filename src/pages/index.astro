@@ -29,8 +29,30 @@ const all=(await Promise.all(groups.map(async c=>(await getCollection(c)).map(e=
 <script define:vars={{all}}>
 const input=document.querySelector('#q'), sections=document.querySelector('#sections'),results=document.querySelector('#results'),cards=document.querySelector('#cards'),empty=document.querySelector('#empty'),label=document.querySelector('#label'),count=document.querySelector('#count'),items=all;
 function match(i,q){return [i.title,i.subtitle,i.type,...i.deity,...i.festivals,...i.aliases,...i.language].join(' ').toLowerCase().includes(q.toLowerCase())}
-function render(q){const list=q?items.filter(i=>match(i,q)):[];sections.hidden=!!q;results.hidden=!q;label.textContent=q?`“${q}”`:'';count.textContent=q?`${list.length} result${list.length===1?'':'s'}`:'';cards.innerHTML=list.map(i=>`<a class="card" href="/library/${i.collection}/${i.slug}"><span class="card-icon">${i.icon}</span><span class="card-type">${i.type}</span><h3>${i.title}</h3><p>${i.subtitle}</p><div class="card-bottom"><small>Read →</small><span>♡</span></div></a>`).join('');empty.hidden=!!list.length}
-input.oninput=()=>render(input.value.trim());document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{input.value=b.dataset.q;render(b.dataset.q);document.querySelector('#library').scrollIntoView({behavior:'smooth'})});document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!==input){e.preventDefault();input.focus()}});
-document.querySelector('#favs').innerHTML='<span style="color:var(--muted);font-size:13px">Favorites will be available once you save prayers from their reading pages.</span>';
+const favoriteKey='smaran-favorites';
+const getFavorites=()=>{try{return JSON.parse(localStorage.getItem(favoriteKey)||'[]')}catch{return[]}};
+const isFavorite=i=>getFavorites().includes(`${i.collection}/${i.slug}`);
+const saveFavorites=list=>localStorage.setItem(favoriteKey,JSON.stringify(list));
+function toggleFavorite(i){
+  const id=`${i.collection}/${i.slug}`, favorites=getFavorites(), index=favorites.indexOf(id);
+  if(index===-1)favorites.push(id);else favorites.splice(index,1);
+  saveFavorites(favorites);render(input.value.trim());renderFavorites();
+}
+function cardMarkup(i){
+  const id=`${i.collection}/${i.slug}`, saved=isFavorite(i);
+  return `<article class="card"><a class="card-main" href="/library/${i.collection}/${i.slug}"><span class="card-icon">${i.icon}</span><span class="card-type">${i.type}</span><h3>${i.title}</h3><p>${i.subtitle}</p></a><div class="card-bottom"><a class="card-read" href="/library/${i.collection}/${i.slug}">Read →</a><button class="favorite-btn${saved?' is-favorite':''}" type="button" data-favorite="${id}" aria-label="${saved?'Remove from favorites':'Add to favorites'}" title="${saved?'Remove from favorites':'Add to favorites'}">${saved?'♥':'♡'}</button></div></article>`;
+}
+function render(q){const list=q?items.filter(i=>match(i,q)):[];sections.hidden=!!q;results.hidden=!q;label.textContent=q?`“${q}”`:'';count.textContent=q?`${list.length} result${list.length===1?'':'s'}`:'';cards.innerHTML=list.map(cardMarkup).join('');empty.hidden=!!list.length}
+function renderFavorites(){
+  const favorites=document.querySelector('#favs'), saved=getFavorites();
+  const list=saved.map(id=>items.find(i=>`${i.collection}/${i.slug}`===id)).filter(Boolean);
+  favorites.innerHTML=list.length?list.map(cardMarkup).join(''):'<span class="favorites-empty">Your saved prayers will appear here.</span>';
+}
+input.oninput=()=>render(input.value.trim());
+document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{input.value=b.dataset.q;render(b.dataset.q);document.querySelector('#library').scrollIntoView({behavior:'smooth'})});
+document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!==input){e.preventDefault();input.focus()}});
+document.addEventListener('click',e=>{const button=e.target.closest('[data-favorite]');if(!button)return;const [collection,slug]=button.dataset.favorite.split('/');const item=items.find(i=>i.collection===collection&&i.slug===slug);if(item)toggleFavorite(item)});
+window.addEventListener('storage',()=>{render(input.value.trim());renderFavorites()});
+renderFavorites();
 </script>
 </BaseLayout>

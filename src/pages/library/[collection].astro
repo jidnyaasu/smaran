@@ -5,4 +5,39 @@ export async function getStaticPaths(){return ['stotra','aarti','mantra-shloka']
 const {collection}=Astro.params;const entries=await getCollection(collection);
 const names={stotra:['Stotra','स्तोत्र','Sacred hymns & prayers'],aarti:['Aarti','आरती','Devotional songs & aartis'],'mantra-shloka':['Mantra & Shloka','मंत्र • श्लोक','Mantras, verses & daily prayers']}[collection];
 ---
-<BaseLayout><main><section class="library-hero"><a class="back" href="/">← Back to library</a><span class="section-kicker">{names[1]}</span><h1>{names[0]}</h1><p>{names[2]}</p></section><section class="section"><div class="cards">{entries.map(e=><a class="card" href={`/library/${collection}/${e.slug}`}><span class="card-icon">{e.data.icon}</span><span class="card-type">{e.data.type}</span><h3>{e.data.title}</h3><p>{e.data.subtitle}</p><div class="card-bottom"><small>Read →</small><span>♡</span></div></a>)}</div></section></main></BaseLayout>
+<BaseLayout><main><section class="library-hero"><a class="back" href="/">← Back to library</a><span class="section-kicker">{names[1]}</span><h1>{names[0]}</h1><p>{names[2]}</p></section><section class="section"><div class="cards" id="collection-cards">{entries.map(e=><article class="card"><a class="card-main" href={`/library/${collection}/${e.slug}`}><span class="card-icon">{e.data.icon}</span><span class="card-type">{e.data.type}</span><h3>{e.data.title}</h3><p>{e.data.subtitle}</p></a><div class="card-bottom"><a class="card-read" href={`/library/${collection}/${e.slug}`}>Read →</a><button class="favorite-btn" type="button" data-favorite={`${collection}/${e.slug}`} aria-label="Add to favorites" title="Add to favorites">♡</button></div></article>)}</div></section></main></BaseLayout>
+
+<script>
+  const favoriteKey='smaran-favorites';
+  const cards=document.querySelector('#collection-cards');
+
+  function getFavorites(){
+    try{return JSON.parse(localStorage.getItem(favoriteKey)||'[]')}
+    catch{return[]}
+  }
+
+  function updateButtons(){
+    const favorites=getFavorites();
+    cards?.querySelectorAll('[data-favorite]').forEach(button=>{
+      const saved=favorites.includes(button.dataset.favorite);
+      button.textContent=saved?'♥':'♡';
+      button.classList.toggle('is-favorite',saved);
+      button.setAttribute('aria-label',saved?'Remove from favorites':'Add to favorites');
+      button.title=saved?'Remove from favorites':'Add to favorites';
+    });
+  }
+
+  cards?.addEventListener('click',event=>{
+    const button=event.target.closest('[data-favorite]');
+    if(!button)return;
+    const favorites=getFavorites();
+    const id=button.dataset.favorite;
+    const index=favorites.indexOf(id);
+    if(index===-1)favorites.push(id);else favorites.splice(index,1);
+    localStorage.setItem(favoriteKey,JSON.stringify(favorites));
+    updateButtons();
+  });
+
+  window.addEventListener('storage',updateButtons);
+  updateButtons();
+</script>
