@@ -4,7 +4,7 @@ subtitle: Gayatri Mantra
 type: Mantra
 icon: ☀️
 deity: [सविता, सूर्य, Gayatri]
-festivals: [नवरात्रि, गणेश चतुर्थी, गणेशोत्सव]
+festivals: [नवरात्रि, गणेश चतुर्थी, गणेशोत्सव, महालक्ष्मी]
 aliases: [gayatri, गायत्री, gayatri mantra]
 language: [Sanskrit]
 ---
