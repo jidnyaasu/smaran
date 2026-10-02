@@ -8,7 +8,8 @@ const prayerSchema = z.object({
   deity: z.array(z.string()).default([]),
   festivals: z.array(z.string()).default([]),
   aliases: z.array(z.string()).default([]),
-  language: z.array(z.string()).default(['Sanskrit'])
+  language: z.array(z.string()).default(['Sanskrit']),
+  textAlign: z.enum(['left', 'center']).default('left')
 });
 
 export const collections = {

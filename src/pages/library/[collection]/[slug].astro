@@ -3,6 +3,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { getCollection, render } from 'astro:content';
 export async function getStaticPaths(){const out=[];for(const collection of ['stotra','aarti','mantra-shloka']){for(const e of await getCollection(collection))out.push({params:{collection,slug:e.slug},props:{entry:e}})}return out}
 const {entry}=Astro.props;const {Content}=await render(entry);
+const textAlign=entry.data.textAlign || 'left';
 ---
 <BaseLayout title={`स्मरण — ${entry.data.title}`}>
   <main>
@@ -39,7 +40,7 @@ const {entry}=Astro.props;const {Content}=await render(entry);
     </article>
   </main>
 
-  <script>
+  <script define:vars={{ textAlign }}>
     const text=document.querySelector('#reader-text');
     const value=document.querySelector('#zoom-value');
     const out=document.querySelector('#zoom-out');
@@ -81,6 +82,11 @@ const {entry}=Astro.props;const {Content}=await render(entry);
       const content=p.textContent?.trim() || '';
       if(/^॥[^॥]+॥$/.test(content) && content.length < 40){
         p.classList.add('reader-section-marker');
+        p.style.display='block';
+        p.style.width='100%';
+        p.style.textAlign='center';
+      }else{
+        p.style.textAlign=textAlign;
       }
     });
     apply();

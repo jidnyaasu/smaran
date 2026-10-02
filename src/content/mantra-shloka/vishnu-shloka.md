@@ -7,6 +7,7 @@ deity: [विष्णु, नारायण, Vishnu, Narayana]
 festivals: [जन्माष्टमी]
 aliases: [vishnu, narayan, विष्णु श्लोक]
 language: [Sanskrit]
+textAlign: center
 ---
 ॥ श्री विष्णु ध्यानम् ॥
 
