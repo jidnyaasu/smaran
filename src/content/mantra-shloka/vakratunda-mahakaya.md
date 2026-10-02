@@ -4,7 +4,7 @@ subtitle: Vakratunda Mahakaya
 type: Shloka
 icon: 🐘
 deity: [गणेश, गणपती, Ganesha]
-festivals: [गणेश चतुर्थी]
+festivals: [गणेश चतुर्थी, गणेशोत्सव]
 aliases: [vakratunda, गणेश श्लोक, ganesh shloka]
 language: [Sanskrit, Marathi]
 ---

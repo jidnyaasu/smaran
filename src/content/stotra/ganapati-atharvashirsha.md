@@ -4,7 +4,7 @@ subtitle: Ganapati Atharvashirsha
 type: Stotra
 icon: 🐘
 deity: [गणेश, गणपती, Ganesha, Ganapati]
-festivals: [गणेश चतुर्थी]
+festivals: [गणेश चतुर्थी, गणेशोत्सव]
 aliases: [ganesh, ganapati, atharvashirsha, गणपति]
 language: [Sanskrit, Marathi]
 ---

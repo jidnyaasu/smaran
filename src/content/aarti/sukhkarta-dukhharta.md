@@ -4,7 +4,7 @@ subtitle: Sukhkarta Dukhharta
 type: Aarti
 icon: 🪔
 deity: [गणेश, गणपती, Ganesha]
-festivals: [गणेश चतुर्थी]
+festivals: [नवरात्रि, गणेश चतुर्थी, गणेशोत्सव]
 aliases: [ganesh aarti, sukhkarta, सुखकर्ता, गणपती आरती]
 language: [Marathi]
 ---
