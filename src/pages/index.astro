@@ -14,7 +14,7 @@ const all=(await Promise.all(groups.map(async c=>(await getCollection(c)).map(e=
 </div><div class="hero-lamp">🪔</div></section>
 
 <section id="search-results-section" class="section compact" hidden>
-<div id="results" class="search-results"><div class="search-heading">Search results <strong id="label"></strong></div><div id="cards" class="cards"></div><div id="empty" class="empty" hidden>No prayers found. Try another term.</div></div>
+<div id="results" class="search-results"><div class="search-heading">Search results <strong id="label"></strong> <span id="result-count"></span></div><div id="cards" class="cards"></div><div id="empty" class="empty" hidden>No prayers found. Try another term.</div></div>
 </section>
 
 <section id="library" class="section"><div class="section-head"><div><span class="section-kicker">Explore</span><h2>The library</h2></div></div>
@@ -72,7 +72,7 @@ const all=(await Promise.all(groups.map(async c=>(await getCollection(c)).map(e=
 }
 </style>
 <script define:vars={{all}}>
-const input=document.querySelector('#q'), clearSearch=document.querySelector('#clear-search'), sections=document.querySelector('#sections'),results=document.querySelector('#results'),resultsSection=document.querySelector('#search-results-section'),cards=document.querySelector('#cards'),empty=document.querySelector('#empty'),label=document.querySelector('#label'),items=all;
+const input=document.querySelector('#q'), clearSearch=document.querySelector('#clear-search'), sections=document.querySelector('#sections'),results=document.querySelector('#results'),resultsSection=document.querySelector('#search-results-section'),cards=document.querySelector('#cards'),empty=document.querySelector('#empty'),label=document.querySelector('#label'),resultCount=document.querySelector('#result-count'),items=all;
 function normalize(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' ')}
 function match(i,q){const haystack=normalize([i.title,i.subtitle,i.type,...i.deity,...i.festivals,...i.aliases,...i.language].join(' '));return haystack.includes(normalize(q))}
 const favoriteKey='smaran-favorites';
@@ -88,7 +88,7 @@ function cardMarkup(i){
   const id=`${i.collection}/${i.slug}`, saved=isFavorite(i);
   return `<article class="card"><a class="card-main" href="/library/${i.collection}/${i.slug}"><span class="card-icon">${i.icon}</span><span class="card-type">${i.type}</span><h3>${i.title}</h3><p>${i.subtitle}</p></a><div class="card-bottom"><a class="card-read" href="/library/${i.collection}/${i.slug}">Read →</a><button class="favorite-btn${saved?' is-favorite':''}" type="button" data-favorite="${id}" aria-label="${saved?'Remove from favorites':'Add to favorites'}" title="${saved?'Remove from favorites':'Add to favorites'}">${saved?'♥':'♡'}</button></div></article>`;
 }
-function render(q){const list=q?items.filter(i=>match(i,q)):[];sections.hidden=!!q;resultsSection.hidden=!q;label.textContent=q?`“${q}”`:'';cards.innerHTML=list.map(cardMarkup).join('');empty.hidden=!!list.length;clearSearch.hidden=!q}
+function render(q){const list=q?items.filter(i=>match(i,q)):[];sections.hidden=!!q;resultsSection.hidden=!q;label.textContent=q?`“${q}”`:'';resultCount.textContent=q?` · ${list.length} ${list.length===1?'prayer':'prayers'}`:'';cards.innerHTML=list.map(cardMarkup).join('');empty.hidden=!!list.length;clearSearch.hidden=!q}
 function renderFavorites(){
   const favorites=document.querySelector('#favs'), saved=getFavorites();
   const list=saved.map(id=>items.find(i=>`${i.collection}/${i.slug}`===id)).filter(Boolean);
